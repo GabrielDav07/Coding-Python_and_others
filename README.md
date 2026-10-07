@@ -185,7 +185,7 @@ Desenvolvido por **Gabriel Barros Davanço**
 
 Estudante de Cibersegurança na instituição **FIAP**.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)]([https://www.linkedin.com/in/SEU-PERFIL](https://www.linkedin.com/in/gabriel-barros-davan%C3%A7o-ba469b315/?isSelfProfile=true))
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)]([https://www.linkedin.com/in/gabriel-barros-davan%C3%A7o-ba469b315/?isSelfProfile=true])
 [![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white)](https://github.com/GabrielDav07)
 
 
