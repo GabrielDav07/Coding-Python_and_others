@@ -1,0 +1,285 @@
+// rodar: python -m http.server 5000
+// porta web: http://localhost:5000
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lamp Animated Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #000;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Checkbox invisível para controlar o estado da luz */
+    #lamp-switch {
+      display: none;
+    }
+
+    .scene-container {
+      position: relative;
+      width: 900px;
+      height: 550px;
+      background: #080808;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 40px;
+      overflow: hidden;
+      border: 1px solid #1a1a1a;
+      transition: background 0.5s ease;
+    }
+
+    /* --- LUMINÁRIA --- */
+    .lamp-wrapper {
+      position: relative;
+      width: 220px;
+      height: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 5;
+    }
+
+    /* Cúpula */
+    .lamp-shade {
+      position: relative;
+      width: 180px;
+      height: 100px;
+      background: #2b2b2b;
+      border-radius: 90px 90px 15px 15px;
+      box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.7);
+      transition: all 0.4s ease;
+      z-index: 3;
+    }
+
+    .lamp-shade::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 20px;
+      background: #1f1f1f;
+      border-radius: 50%;
+    }
+
+    /* Haste e Base */
+    .lamp-stem {
+      width: 14px;
+      height: 220px;
+      background: linear-gradient(90deg, #1f1f1f, #3a3a3a, #1f1f1f);
+      margin-top: -5px;
+    }
+
+    .lamp-base {
+      width: 130px;
+      height: 18px;
+      background: linear-gradient(180deg, #3a3a3a, #1a1a1a);
+      border-radius: 10px 10px 4px 4px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Cordinha da lâmpada */
+    .pull-chain {
+      position: absolute;
+      top: 90px;
+      right: 35px;
+      width: 3px;
+      height: 85px;
+      background: #555;
+      cursor: pointer;
+      z-index: 4;
+      transition: transform 0.15s ease-in-out;
+    }
+
+    .pull-chain::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: -4px;
+      width: 11px;
+      height: 11px;
+      background: #888;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    .pull-chain:active {
+      transform: translateY(12px);
+    }
+
+    /* Cone de Luz Projetado */
+    .light-beam {
+      position: absolute;
+      top: 85px;
+      left: 90px;
+      width: 750px;
+      height: 480px;
+      background: radial-gradient(
+        ellipse at top left,
+        rgba(255, 235, 170, 0.45) 0%,
+        rgba(255, 220, 130, 0.15) 45%,
+        rgba(0, 0, 0, 0) 75%
+      );
+      clip-path: polygon(0 0, 100% 20%, 100% 100%, 0 80%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out;
+      z-index: 2;
+    }
+
+    /* --- FORMULÁRIO DE LOGIN (Totalmente camuflado no escuro) --- */
+    .login-card {
+      position: relative;
+      width: 320px;
+      padding: 35px 30px;
+      background: rgba(18, 18, 18, 0.95);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      box-shadow: none;
+      opacity: 0; /* Camuflado/Invisível no início */
+      transform: scale(0.95) translateX(10px);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .login-card h2 {
+      color: #fff;
+      font-size: 24px;
+      margin-bottom: 25px;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .input-group input:focus {
+      border-color: #d4af37;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, #e5c158, #b88e28);
+      border: none;
+      border-radius: 8px;
+      color: #111;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .login-btn:hover {
+      box-shadow: 0 0 15px rgba(229, 193, 88, 0.4);
+    }
+
+    /* --- ESTADO 'LIGADO' (Checked) --- */
+
+    /* Acende a cúpula por dentro */
+    #lamp-switch:checked ~ .scene-container .lamp-shade {
+      background: #3d3b33;
+      box-shadow: inset 0 -5px 15px rgba(255, 230, 150, 0.8), 0 0 20px rgba(255, 220, 130, 0.3);
+    }
+
+    /* Exibe o cone de luz */
+    #lamp-switch:checked ~ .scene-container .light-beam {
+      opacity: 1;
+    }
+
+    /* Clareia o ambiente suavemente */
+    #lamp-switch:checked ~ .scene-container {
+      background: #121110;
+    }
+
+    /* Revela o formulário de login sob a luz */
+    #lamp-switch:checked ~ .scene-container .login-card {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateX(0);
+      background: rgba(28, 26, 23, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 220, 130, 0.2);
+      box-shadow: -10px 15px 35px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 220, 130, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Comando do terminal oculto: python -m http.server 5000 -->
+  <input type="checkbox" id="lamp-switch">
+
+  <div class="scene-container">
+    
+    <!-- Luminária + Cordinha -->
+    <div class="lamp-wrapper">
+      <div class="lamp-shade"></div>
+      <div class="lamp-stem"></div>
+      <div class="lamp-base"></div>
+      <label for="lamp-switch" class="pull-chain" title="Puxe para acender/apagar"></label>
+    </div>
+
+    <!-- Feixe de Luz Projetado -->
+    <div class="light-beam"></div>
+
+    <!-- Formulário de Login Oculto -->
+    <div class="login-card">
+      <h2>Welcome</h2>
+      <form onsubmit="return false;">
+        <div class="input-group">
+          <label for="user">Username</label>
+          <input type="text" id="user" placeholder="Enter name">
+        </div>
+        <div class="input-group">
+          <label for="pass">Password</label>
+          <input type="password" id="pass" placeholder="Enter Password">
+        </div>
+        <button type="submit" class="login-btn">Sign In</button>
+      </form>
+    </div>
+
+  </div>
+
+</body>
+</html>

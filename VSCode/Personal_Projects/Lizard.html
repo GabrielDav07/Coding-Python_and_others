@@ -1,0 +1,163 @@
+// rodar: python -m http.server 5000
+// porta web: http://localhost:5000
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Inverse Kinematics Lizard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0a0a0a;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      border: 1px solid #1d03c6;
+      background: #4f4f4f;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Código ajustado para rodar via: python -m http.server 5000 -->
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+});
+
+// Estrutura de segmentos do corpo
+const numSegments = 30;
+const segmentLength = 12;
+const spine = [];
+
+for (let i = 0; i < numSegments; i++) {
+  spine.push({
+    x: canvas.width / 2,
+    y: canvas.height / 2 + i * segmentLength,
+    angle: 0
+  });
+}
+
+// Configuração das pernas
+const legs = [
+  { spineIndex: 5, side: -1, jointX: 0, jointY: 0, footX: 0, footY: 0 },
+  { spineIndex: 5, side: 1, jointX: 0, jointY: 0, footX: 0, footY: 0 },
+  { spineIndex: 18, side: -1, jointX: 0, jointY: 0, footX: 0, footY: 0 },
+  { spineIndex: 18, side: 1, jointX: 0, jointY: 0, footX: 0, footY: 0 }
+];
+
+function updateSpine() {
+  spine[0].x += (mouse.x - spine[0].x) * 0.1;
+  spine[0].y += (mouse.y - spine[0].y) * 0.1;
+
+  for (let i = 1; i < numSegments; i++) {
+    const dx = spine[i - 1].x - spine[i].x;
+    const dy = spine[i - 1].y - spine[i].y;
+    const angle = Math.atan2(dy, dx);
+    spine[i].angle = angle;
+
+    spine[i].x = spine[i - 1].x - Math.cos(angle) * segmentLength;
+    spine[i].y = spine[i - 1].y - Math.sin(angle) * segmentLength;
+  }
+}
+
+function updateLegs() {
+  legs.forEach(leg => {
+    const parentSeg = spine[leg.spineIndex];
+    const normalAngle = parentSeg.angle + (leg.side * Math.PI / 2);
+
+    leg.jointX = parentSeg.x + Math.cos(normalAngle) * 15;
+    leg.jointY = parentSeg.y + Math.sin(normalAngle) * 15;
+
+    const desiredFootX = parentSeg.x + Math.cos(normalAngle) * 60;
+    const desiredFootY = parentSeg.y + Math.sin(normalAngle) * 60;
+
+    const dist = Math.hypot(desiredFootX - leg.footX, desiredFootY - leg.footY);
+
+    if (dist > 80 || (leg.footX === 0 && leg.footY === 0)) {
+      leg.footX = desiredFootX;
+      leg.footY = desiredFootY;
+    }
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "#cccccc";
+  ctx.lineWidth = 1.5;
+
+  legs.forEach(leg => {
+    const midX = (leg.jointX + leg.footX) / 2 + Math.cos(spine[leg.spineIndex].angle) * 20;
+    const midY = (leg.jointY + leg.footY) / 2 + Math.sin(spine[leg.spineIndex].angle) * 20;
+
+    ctx.beginPath();
+    ctx.moveTo(leg.jointX, leg.jointY);
+    ctx.lineTo(midX, midY);
+    ctx.lineTo(leg.footX, leg.footY);
+    ctx.stroke();
+
+    for (let a = -0.5; a <= 0.5; a += 0.5) {
+      const toeAngle = spine[leg.spineIndex].angle + a;
+      ctx.beginPath();
+      ctx.moveTo(leg.footX, leg.footY);
+      ctx.lineTo(leg.footX + Math.cos(toeAngle) * 10, leg.footY + Math.sin(toeAngle) * 10);
+      ctx.stroke();
+    }
+  });
+
+  for (let i = 0; i < spine.length; i++) {
+    const seg = spine[i];
+    const ribWidth = Math.sin((i / spine.length) * Math.PI) * 25;
+    if (ribWidth > 2) {
+      const normalAngle = seg.angle + Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(seg.x + Math.cos(normalAngle) * ribWidth, seg.y + Math.sin(normalAngle) * ribWidth);
+      ctx.lineTo(seg.x - Math.cos(normalAngle) * ribWidth, seg.y - Math.sin(normalAngle) * ribWidth);
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.arc(seg.x, seg.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(spine[0].x, spine[0].y);
+  for (let i = 1; i < spine.length; i++) {
+    ctx.lineTo(spine[i].x, spine[i].y);
+  }
+  ctx.stroke();
+}
+
+function loop() {
+  updateSpine();
+  updateLegs();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>

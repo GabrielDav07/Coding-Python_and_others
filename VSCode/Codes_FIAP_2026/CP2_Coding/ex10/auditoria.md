@@ -1,0 +1,15 @@
+# Relatório de Auditoria de Segurança — OWASP Top 10 (2025)
+
+Auditoria realizada sobre a API `app_vulneravel.py`, identificando 9 vulnerabilidades (incluindo as 2 ausências obrigatórias):
+
+| # | Falha Identificada | Trecho Vulnerável | Código OWASP (2025) | Impacto de Segurança | Correção Aplicada |
+|---|--------------------|-------------------|---------------------|----------------------|-------------------|
+| 1 | **Segredos e Credenciais Hardcoded** | `SENHA_MESTRA = "Cyber@2024"` e `password="senha"` | **A02 — Cryptographic Failures** | Vazamento de credenciais mestre e acesso ao banco por leitura do código-fonte. | Migrar credenciais para variáveis de ambiente com `os.getenv()`. |
+| 2 | **SQL Injection (Concatenação)** | `cur.execute(f"... LIKE '%{nome}%'")` em `/buscar` | **A03 — Injection** | Permite burlar a query com `' OR '1'='1` e despejar todo o banco de dados. | Utilizar query parametrizada com placeholder `%s`. |
+| 3 | **Exposição Excessiva de Dados (Overfetching)** | `SELECT * FROM usuarios` em `/buscar` | **A02 — Cryptographic Failures** | Devolve colunas confidenciais (como senhas e hashes) no payload JSON. | Projetar explicitamente apenas as colunas públicas (`SELECT id, nome, email`). |
+| 4 | **Cross-Site Scripting (XSS Refletido)** | `return f"<h1>... {request.args.get('u')}</h1>"` em `/perfil` | **A03 — Injection (XSS)** | Execução de scripts JavaScript maliciosos arbitrários no navegador do cliente. | Utilizar template engine Jinja2 com autoescape ativado por padrão. |
+| 5 | **Quebra de Controle de Acesso (IDOR / Sem Auth)** | `DELETE /api/usuarios/<uid>` sem autenticação | **A01 — Broken Access Control** | Qualquer usuário anônimo pode excluir contas de terceiros livremente. | Exigir autenticação via header `X-API-Key` e validar permissão de admin (nível >= 5). |
+| 6 | **Vazamento de Detalhes Internos em Erros** | `SELECT * FROM tabela_inexistente` em `/relatorio` | **A05 — Security Misconfiguration** | Erro 500 exibe traceback completo, expondo arquitetura e nomes de tabelas. | Implementar captura genérica de exceções retornando mensagem JSON opaca. |
+| 7 | **Modo Debug e Interface Exposta** | `app.run(debug=True, host="0.0.0.0")` | **A05 — Security Misconfiguration** | Debugger interativo do Werkzeug permite RCE (Execução Remota de Código) na rede. | Desativar debug (`debug=False`) e limitar escuta ao host local (`127.0.0.1`). |
+| 8 | **AUSÊNCIA 1: Cabeçalhos de Segurança HTTP** | *(Nenhum header defensivo configurado)* | **A05 — Security Misconfiguration** | Navegador vulnerável a ataques de Clickjacking, MIME sniffing e XSS inline. | Adicionar `@app.after_request` injetando CSP, X-Content-Type-Options e X-Frame-Options. |
+| 9 | **AUSÊNCIA 2: Registro de Auditoria e Logs** | *(Nenhuma linha de logging na aplicação)* | **A09 — Security Logging Failures** | Ataques bem ou mal sucedidos não deixam rastro para investigação forense no SOC. | Implementar módulo de logging registrando acessos, falhas de autenticação e erros. |
