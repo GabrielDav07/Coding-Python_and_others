@@ -1,4 +1,4 @@
-# 🛡️ Repositório de Códigos & Projetos — Cybersecurity, DevSecOps & Web
+# Repositório de Códigos & Projetos — Cybersecurity, DevSecOps & Web
 
 <div align="center">
 
