@@ -181,7 +181,7 @@ Acesse no seu navegador:
 
 ## 👨‍💻 Autor
 
-Desenvolvido por **Leonardo** 🚀  
+Desenvolvido por **Gabriel Barros Davanço** 🚀  
 Estudante de Segurança da Informação & Engenharia de Software na **FIAP**.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/SEU-PERFIL)
